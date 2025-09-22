@@ -5,18 +5,32 @@ import kotlin.Double
 const val MAX_DAILY_LIMIT = 150_000.0
 const val MAX_MONTHLY_LIMIT = 600_000.0
 
-const val MASTERCARD_FREE_TRANSACTIONS_LIMIT = 75_000.0
-const val MASTERCARD_COMMISSION_RATE = 0.006
-const val MASTERCARD_FIXED_FEE = 20.0
+const val MAX_VK_TRANSACTION_LIMIT = 15_000.0
+const val MAX_VK_MONTHLY_LIMIT = 40_000.0
 
-const val VISA_COMMISSION_RATE = 0.0075
-const val MIN_VISA_COMMISSION = 35.0
+const val MAX_MAESTRO_MASTERCARD_FREE_LIMIT = 75_000.0
+const val MIN_MAESTRO_MASTERCARD_FREE_LIMIT = 300.0
+
+const val MAESTRO_MASTERCARD_COMMISSION_RATE = 0.006
+const val MAESTRO_MASTERCARD_FIXED_FEE = 20.0
+
+const val VISA_MIR_COMMISSION_RATE = 0.0075
+const val MIN_VISA_MIR_COMMISSION = 35.0
 
 // Перечисление для платёжных систем
 enum class PaymentSystem {
     MASTERCARD,
+    MAESTRO,
     MIR,
-    VISA
+    VISA,
+    VKPAY
+}
+
+// Типы превышения лимитов
+enum class LimitExeedType {
+    TRANSACTION,
+    DAILY,
+    MONTHLY
 }
 
 
@@ -30,14 +44,6 @@ data class Request(
 )
 
 // Создаём несколько переменных для проверки
-// запрос по умолчанию
-val request_default = Request(
-    paymentSystem = PaymentSystem.MIR,
-    amountPerDay = 0.0,
-    amountPerMonth = 0.0,
-    amount = 1.0
-    // ожидаем 0.0
-)
 
 // Превышен дневной лимит
 val request1 = Request(
@@ -83,6 +89,7 @@ val request5 = Request(
     amount = 60_000.0
     // ожидаем 50.0
 )
+
 // Мастеркард. Текущий плотёж + сумма за месяц превышает лимит
 val request6 = Request(
     paymentSystem = PaymentSystem.MASTERCARD,
@@ -125,50 +132,68 @@ val request10 = Request(
     amountPerDay = 10_000.0,
     amountPerMonth = 20_000.0,
     amount = 140_000.0
-    // ожидаем 0.0
+    // ожидаем 1050.0
 )
 
 fun main() {
 
     // проверяем работу calculateCommission() с параметром по умолчанию
-    println("Комиссия для MIR " +
-            "при переводе в 1 руб. " +
-            "составит " + calculateCommission()+" руб.")
+    println(
+        "Комиссия для MIR " +
+                "при переводе в 1 руб. " +
+                "составит " + calculateCommission() + " руб."
+    )
 
     calculateCommission(request1)
     calculateCommission(request2)
 
-    println("Комиссия для ${request3.paymentSystem} " +
-            "при переводе в ${request3.amount} руб. " +
-            "составит " + calculateCommission(request3)+" руб.")
+    println(
+        "Комиссия для ${request3.paymentSystem} " +
+                "при переводе в ${request3.amount} руб. " +
+                "составит " + calculateCommission(request3) + " руб."
+    )
 
-    println("Комиссия для ${request4.paymentSystem} " +
-            "при переводе в ${request4.amount} руб. " +
-            "составит " + calculateCommission(request4)+" руб.")
+    println(
+        "Комиссия для ${request4.paymentSystem} " +
+                "при переводе в ${request4.amount} руб. " +
+                "составит " + calculateCommission(request4) + " руб."
+    )
 
-    println("Комиссия для ${request5.paymentSystem} " +
-            "при переводе в ${request5.amount} руб. " +
-            "составит " + calculateCommission(request5)+" руб.")
+    println(
+        "Комиссия для ${request5.paymentSystem} " +
+                "при переводе в ${request5.amount} руб. " +
+                "составит " + calculateCommission(request5) + " руб."
+    )
 
-    println("Комиссия для ${request6.paymentSystem} " +
-            "при переводе в ${request6.amount} руб. " +
-            "составит " + calculateCommission(request6)+" руб.")
+    println(
+        "Комиссия для ${request6.paymentSystem} " +
+                "при переводе в ${request6.amount} руб. " +
+                "составит " + calculateCommission(request6) + " руб."
+    )
 
-    println("Комиссия для ${request7.paymentSystem} " +
-            "при переводе в ${request7.amount} руб. " +
-            "составит " + calculateCommission(request7)+" руб.")
+    println(
+        "Комиссия для ${request7.paymentSystem} " +
+                "при переводе в ${request7.amount} руб. " +
+                "составит " + calculateCommission(request7) + " руб."
+    )
 
-    println("Комиссия для ${request8.paymentSystem} " +
-            "при переводе в ${request8.amount} руб. " +
-            "составит " + calculateCommission(request8)+" руб.")
+    println(
+        "Комиссия для ${request8.paymentSystem} " +
+                "при переводе в ${request8.amount} руб. " +
+                "составит " + calculateCommission(request8) + " руб."
+    )
 
-    println("Комиссия для ${request9.paymentSystem} " +
-            "при переводе в ${request9.amount} руб. " +
-            "составит " + calculateCommission(request9)+" руб.")
+    println(
+        "Комиссия для ${request9.paymentSystem} " +
+                "при переводе в ${request9.amount} руб. " +
+                "составит " + calculateCommission(request9) + " руб."
+    )
 
-    println("Комиссия для ${request10.paymentSystem} " +
-            "при переводе в ${request10.amount} руб. " +
-            "составит " + calculateCommission(request10)+" руб.")
+    println(
+        "Комиссия для ${request10.paymentSystem} " +
+                "при переводе в ${request10.amount} руб. " +
+                "составит " + calculateCommission(request10) + " руб."
+    )
 }
 
 
@@ -187,10 +212,14 @@ fun calculateCommission(
         return 0.0
     }
 
-    return when (request.paymentSystem) {
-        PaymentSystem.VISA -> calculateVisaCommission(request.amount)
-        PaymentSystem.MASTERCARD -> calculateMastercardCommission(request)
-        PaymentSystem.MIR -> 0.0
+    return when {
+        request.paymentSystem == PaymentSystem.VISA ||
+                request.paymentSystem == PaymentSystem.MIR ->
+                    calculateVisaMirCommission(request.amount)
+        request.paymentSystem == PaymentSystem.MASTERCARD ||
+                request.paymentSystem == PaymentSystem.MAESTRO ->
+                    calculateMaestroMastercardCommission(request)
+        request.paymentSystem == PaymentSystem.VKPAY -> 0.0
         else -> {
             println("Неизвестный тип карты.")
             0.0
@@ -198,31 +227,34 @@ fun calculateCommission(
     }
 }
 
-// Функция вычисляет комиссию для карты Visa
-fun calculateVisaCommission(amount: Double): Double {
-    val commission = amount * VISA_COMMISSION_RATE
-    return if (amount * VISA_COMMISSION_RATE > MIN_VISA_COMMISSION)
-        amount * VISA_COMMISSION_RATE
-            else MIN_VISA_COMMISSION
+// Функция вычисляет комиссию для карт Visa или Мир
+fun calculateVisaMirCommission(amount: Double): Double {
+    val commission = amount * VISA_MIR_COMMISSION_RATE
+    return if (amount * VISA_MIR_COMMISSION_RATE > MIN_VISA_MIR_COMMISSION)
+        amount * VISA_MIR_COMMISSION_RATE
+    else MIN_VISA_MIR_COMMISSION
 }
 
-// Функция вычисляет комиссию для Mastercard
-fun calculateMastercardCommission(request: Request): Double {
+// Функция вычисляет комиссию для Mastercard или Maestro
+fun calculateMaestroMastercardCommission(request: Request): Double {
     val totalDay = request.amountPerDay + request.amount
     val totalMonth = request.amountPerMonth + request.amount
 
     return when {
+        // 0. Платёж меньше установленной суммы
+        request.amount < MIN_MAESTRO_MASTERCARD_FREE_LIMIT ->
+            request.amount * MAESTRO_MASTERCARD_COMMISSION_RATE + MAESTRO_MASTERCARD_FIXED_FEE
         // 1. Предыдущие платежи уже превысили лимит
-        request.amountPerDay >= MASTERCARD_FREE_TRANSACTIONS_LIMIT || request.amountPerMonth >= MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
-            request.amount * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
+        request.amountPerDay >= MAX_MAESTRO_MASTERCARD_FREE_LIMIT || request.amountPerMonth >= MAX_MAESTRO_MASTERCARD_FREE_LIMIT ->
+            request.amount * MAESTRO_MASTERCARD_COMMISSION_RATE + MAESTRO_MASTERCARD_FIXED_FEE
 
         // 2. Текущий платёж + сумма за день превышает лимит
-        totalDay > MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
-            (totalDay - MASTERCARD_FREE_TRANSACTIONS_LIMIT) * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
+        totalDay > MAX_MAESTRO_MASTERCARD_FREE_LIMIT ->
+            (totalDay - MAX_MAESTRO_MASTERCARD_FREE_LIMIT) * MAESTRO_MASTERCARD_COMMISSION_RATE + MAESTRO_MASTERCARD_FIXED_FEE
 
         // 3. Текущий платёж + сумма за месяц превышает лимит
-        totalMonth > MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
-            (totalMonth - MASTERCARD_FREE_TRANSACTIONS_LIMIT) * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
+        totalMonth > MAX_MAESTRO_MASTERCARD_FREE_LIMIT ->
+            (totalMonth - MAX_MAESTRO_MASTERCARD_FREE_LIMIT) *MAESTRO_MASTERCARD_COMMISSION_RATE + MAESTRO_MASTERCARD_FIXED_FEE
 
         // Остальные случаи — комиссия не взимается
         else -> 0.0
@@ -231,29 +263,54 @@ fun calculateMastercardCommission(request: Request): Double {
 
 // Функция проверяет дневной и месячный лимиты и выводит соответствующие сообщения.
 // Если какой-то из лимитов превышен - вернёт true, если перевод укладывается в лимиты - false
-fun isLimitsExeeded(
-    request: Request
-): Boolean {
-    //Проверяем, укладывается ли перевод в дневной лимит.
-    val dailyLimitExceeded = request.amountPerDay + request.amount > MAX_DAILY_LIMIT
+fun isLimitsExeeded(request: Request): Boolean {
+    val totalDay = request.amountPerDay + request.amount
+    val totalMonth = request.amountPerMonth + request.amount
+    return when {
+        // Проверяем дневной лимит VK
+        request.paymentSystem == PaymentSystem.VKPAY &&
+                request.amount > MAX_VK_TRANSACTION_LIMIT -> {
+            limitExeedMessagePrint(LimitExeedType.TRANSACTION, MAX_VK_TRANSACTION_LIMIT)
+            true
+        }
 
-    //Проверяем, укладывается ли перевод в месячный лимит.
-    val monthlyLimitExceeded = request.amountPerMonth + request.amount > MAX_MONTHLY_LIMIT
+        // Проверяем месячный лимит VK
+        request.paymentSystem == PaymentSystem.VKPAY &&
+                (totalDay > MAX_VK_MONTHLY_LIMIT || totalMonth > MAX_VK_MONTHLY_LIMIT) -> {
+            limitExeedMessagePrint(LimitExeedType.MONTHLY, MAX_VK_MONTHLY_LIMIT)
+            true
+        }
 
-    // Формируем сообщение об ошибке
-    val errorMessage = when {
-        dailyLimitExceeded -> "Операция отменена. " +
-                "Нельзя перевести более $MAX_DAILY_LIMIT рублей в сутки. " +
+        // Проверяем дневной лимит для карт
+        totalDay > MAX_DAILY_LIMIT -> {
+            limitExeedMessagePrint(LimitExeedType.DAILY, MAX_DAILY_LIMIT)
+            true
+        }
+        // Проверяем месячный лимит для карт
+        totalMonth > MAX_MONTHLY_LIMIT -> {
+            limitExeedMessagePrint(LimitExeedType.MONTHLY, MAX_MONTHLY_LIMIT)
+            true
+        }
+        else -> false
+    }
+}
+
+// Формируем и выводим сообщение о превышении лимита
+fun limitExeedMessagePrint(exeedType: LimitExeedType, limit: Double) {
+    val message = when (exeedType) {
+        LimitExeedType.TRANSACTION -> "Операция отменена. " +
+                "Нельзя перевести более $limit руб. за один раз. " +
+                "Попробуйте уменьшить сумму или сделать несколько переводов."
+
+        LimitExeedType.DAILY -> "Операция отменена. " +
+                "Нельзя перевести более $limit руб. в сутки. " +
                 "Попробуйте уменьшить сумму или выполнить операцию в другой день."
 
-        monthlyLimitExceeded -> "Операция отменена. " +
-                "Нельзя перевести более $MAX_MONTHLY_LIMIT" +
-                "рублей в месяц. " +
+        LimitExeedType.MONTHLY -> "Операция отменена. " +
+                "Нельзя перевести более $limit руб. в месяц. " +
                 "Попробуйте  уменьшить сумму или выполнить операцию в следующем месяце."
-        else -> null
     }
-
-    // Если есть сообщение об ошибке, выводим его
-    errorMessage?.let { println(it) }
-    return dailyLimitExceeded || monthlyLimitExceeded
+    message?.let {
+        println(it)
+    }
 }
