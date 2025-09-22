@@ -116,7 +116,7 @@ val request9 = Request(
     amountPerDay = 10_000.0,
     amountPerMonth = 20_000.0,
     amount = 15_000.0
-    // ожидаем 147.5
+    // ожидаем 112.5
 )
 
 // МИР без комиссии.
@@ -216,17 +216,13 @@ fun calculateMastercardCommission(request: Request): Double {
         request.amountPerDay >= MASTERCARD_FREE_TRANSACTIONS_LIMIT || request.amountPerMonth >= MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
             request.amount * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
 
-        // 2. Общая сумма за день превышает лимит
+        // 2. Текущий платёж + сумма за день превышает лимит
         totalDay > MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
             (totalDay - MASTERCARD_FREE_TRANSACTIONS_LIMIT) * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
 
-        // 3. Общая сумма за месяц превышает лимит
+        // 3. Текущий платёж + сумма за месяц превышает лимит
         totalMonth > MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
             (totalMonth - MASTERCARD_FREE_TRANSACTIONS_LIMIT) * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
-
-        // 4. Текущий платёж превышает лимит
-        request.amount > MASTERCARD_FREE_TRANSACTIONS_LIMIT ->
-            (request.amount - MASTERCARD_FREE_TRANSACTIONS_LIMIT) * MASTERCARD_COMMISSION_RATE + MASTERCARD_FIXED_FEE
 
         // Остальные случаи — комиссия не взимается
         else -> 0.0
