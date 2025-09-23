@@ -51,7 +51,7 @@ class CalculateCommissionTest {
             org.junit.jupiter.params.provider.Arguments.of(
                 Transaction(PaymentSystem.VKPAY, 35_000.0, 38_000.0, 3_000.0), 0.0
             ),
-            
+
             org.junit.jupiter.params.provider.Arguments.of(
                 Transaction(PaymentSystem.VKPAY, 39_000.0, 39_000.0, 3_000.0), 0.0
             ),
