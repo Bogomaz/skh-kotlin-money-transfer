@@ -49,7 +49,7 @@ data class Transaction(
 fun main() {
 
     // проверяем работу ru.netology.calculateCommission() с параметром по умолчанию
-    println("Эта программа умеет считать комисссию за перевод.")
+    println("This is a commission calculator.")
 }
 
 
